@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Examen de Cálculo Mental - Potencias de Números Naturales</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
+    body { font-family: 'Outfit', sans-serif; }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen py-8 px-4 flex justify-center items-center">
+
+  <div class="max-w-2xl w-full">
+    
+    <!-- HEADER GENERAL -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center p-3 bg-indigo-600 text-white rounded-2xl shadow-lg mb-3">
+        <i class="fa-solid fa-superscript text-3xl"></i>
+      </div>
+      <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Examen: Propiedades de Potencias</h1>
+      <p class="text-slate-500 font-medium">Cálculo mental (10 preguntas - 1 intento por día)</p>
+    </div>
+
+    <!-- PANTALLA: YA COMPLETADO -->
+    <div id="alreadyDoneCard" class="hidden glass-card rounded-3xl p-8 shadow-xl border border-red-100 text-center">
+      <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-800 mb-2">Intento Diario Agotado</h2>
+      <p class="text-slate-600 mb-6">Ya has realizado este examen hoy desde este equipo. Podrás volver a realizarlo mañana.</p>
+      
+      <div id="previousResultBox" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-left max-w-md mx-auto mb-4 text-slate-700 space-y-2">
+      </div>
+    </div>
+
+    <!-- PANTALLA: REGISTRO -->
+    <div id="registerCard" class="glass-card rounded-3xl p-8 shadow-xl border border-slate-200/80">
+      <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-user-check text-indigo-600"></i>
+        Identificación del Alumno
+      </h2>
+      <p class="text-sm text-slate-500 mb-6">Introduce tus datos antes de iniciar el test. Tienes 1 intento diario.</p>
+
+      <form id="registerForm" onsubmit="startQuiz(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Nombre Completo</label>
+          <input type="text" id="studentName" required placeholder="Ej. María García López" 
+            class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Grupo / Curso</label>
+          <input type="text" id="studentGroup" required placeholder="Ej. 1º ESO A" 
+            class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none">
+        </div>
+
+        <button type="submit" 
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 mt-2">
+          <span>Comenzar Examen de Potencias</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- PANTALLA: TEST -->
+    <div id="quizCard" class="hidden glass-card rounded-3xl p-8 shadow-xl border border-slate-200/80">
+      <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <span class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-sm" id="questionProgress">
+            Pregunta 1 de 10
+          </span>
+        </div>
+        <div class="flex items-center gap-2 text-slate-600 font-semibold bg-slate-100 px-3 py-1.5 rounded-xl text-sm">
+          <i class="fa-solid fa-stopwatch text-indigo-600"></i>
+          <span id="timer">00:00</span>
+        </div>
+      </div>
+
+      <div class="my-8 text-center">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 block">Aplica las propiedades y simplifica en una única potencia:</span>
+        <div class="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-wide font-mono" id="questionText">
+          --
+        </div>
+        <p class="text-xs text-slate-400 mt-3">Escribe tu respuesta con el símbolo <strong>^</strong> (ejemplos: <strong>2^4</strong>, <strong>5^8</strong>, <strong>11^5</strong>)</p>
+      </div>
+
+      <form id="answerForm" onsubmit="submitAnswer(event)" class="space-y-4 max-w-md mx-auto">
+        <div>
+          <input type="text" id="userAnswer" required placeholder="Ejemplo: 2^4" autofocus autocomplete="off"
+            class="w-full px-4 py-3.5 text-center text-xl font-bold rounded-xl border-2 border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none">
+        </div>
+        <button type="submit" id="nextBtn"
+          class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+          <span>Siguiente Respuesta</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- PANTALLA: RESULTADOS -->
+    <div id="resultCard" class="hidden glass-card rounded-3xl p-8 shadow-xl border border-slate-200/80 text-center">
+      <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      
+      <h2 class="text-2xl font-bold text-slate-800 mb-1">¡Examen Finalizado!</h2>
+      <p class="text-slate-500 text-sm mb-6" id="studentSummary"></p>
+
+      <div class="grid grid-cols-2 gap-4 max-w-md mx-auto mb-6">
+        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+          <p class="text-xs font-semibold text-slate-400 uppercase">Nota Final</p>
+          <p class="text-3xl font-extrabold text-indigo-600 mt-1" id="scoreDisplay">0 / 10</p>
+        </div>
+        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+          <p class="text-xs font-semibold text-slate-400 uppercase">Tiempo Empleado</p>
+          <p class="text-3xl font-extrabold text-slate-700 mt-1" id="timeDisplay">0s</p>
+        </div>
+      </div>
+
+      <div id="sendingStatus" class="flex items-center justify-center gap-2 text-indigo-600 font-medium my-4">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <span>Enviando nota al profesor...</span>
+      </div>
+
+      <p class="text-xs text-slate-400 mt-6">Tus resultados han sido registrados. Puedes cerrar esta pestaña.</p>
+    </div>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // CONFIGURACIÓN DE GOOGLE APPS SCRIPT
+    // =========================================================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKs1Ta2-jajMxPrQUVMeorVfefcQbx2bGr3RSqUfgAVd_aYuNQgSmpEL5twtrngeyK/exec";
+
+    let currentQuestionIndex = 0;
+    const totalQuestions = 10;
+    let questions = [];
+    let studentData = { name: '', group: '' };
+    let startTime, timerInterval, totalSeconds = 0;
+    let score = 0;
+
+    // COMPROBACIÓN DE INTENTO DIARIO
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedResult = localStorage.getItem('examen_potencias_naturales_completado');
+      const hoyStr = new Date().toLocaleDateString('es-ES');
+
+      if (savedResult) {
+        const data = JSON.parse(savedResult);
+        
+        if (data.fechaSoloDia === hoyStr) {
+          document.getElementById('registerCard').classList.add('hidden');
+          document.getElementById('alreadyDoneCard').classList.remove('hidden');
+          document.getElementById('previousResultBox').innerHTML = `
+            <p><strong>Alumno:</strong> ${data.nombre}</p>
+            <p><strong>Grupo:</strong> ${data.grupo}</p>
+            <p><strong>Nota enviada hoy:</strong> <span class="text-indigo-600 font-bold">${data.nota} / 10</span></p>
+            <p><strong>Hora de entrega:</strong> ${data.fecha}</p>
+          `;
+        }
+      }
+    });
+
+    // GENERACIÓN DE PREGUNTAS SOBRE PROPIEDADES DE POTENCIAS
+    function generateQuestions() {
+      const basesComunes = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+      const generated = [];
+
+      for (let i = 0; i < totalQuestions; i++) {
+        const base = basesComunes[Math.floor(Math.random() * basesComunes.length)];
+        // Tipo 1: Producto (a^x · a^y = a^(x+y))
+        // Tipo 2: Cociente (a^x : a^y = a^(x-y))
+        // Tipo 3: Potencia de potencia ((a^x)^y = a^(x*y))
+        const opType = Math.floor(Math.random() * 3) + 1;
+
+        let exp1, exp2, resExp, text;
+
+        if (opType === 1) { // Multiplicación
+          exp1 = Math.floor(Math.random() * 6) + 1; // 1 a 6
+          exp2 = Math.floor(Math.random() * 6) + 1; // 1 a 6
+          resExp = exp1 + exp2;
+          text = `${base}^${exp1} · ${base}^${exp2}`;
+        } else if (opType === 2) { // División
+          exp2 = Math.floor(Math.random() * 5) + 1; // 1 a 5
+          exp1 = exp2 + Math.floor(Math.random() * 6) + 1; // exp1 > exp2
+          resExp = exp1 - exp2;
+          text = `${base}^${exp1} : ${base}^${exp2}`;
+        } else { // Potencia de una potencia
+          exp1 = Math.floor(Math.random() * 4) + 2; // 2 a 5
+          exp2 = Math.floor(Math.random() * 4) + 2; // 2 a 5
+          resExp = exp1 * exp2;
+          text = `(${base}^${exp1})^${exp2}`;
+        }
+
+        generated.push({ 
+          text, 
+          base: base, 
+          exp: resExp 
+        });
+      }
+      return generated;
+    }
+
+    function startQuiz(e) {
+      e.preventDefault();
+      const name = document.getElementById('studentName').value.trim();
+      const group = document.getElementById('studentGroup').value.trim();
+
+      if (!name || !group) return;
+
+      studentData.name = name;
+      studentData.group = group;
+
+      questions = generateQuestions();
+
+      document.getElementById('registerCard').classList.add('hidden');
+      document.getElementById('quizCard').classList.remove('hidden');
+
+      startTimer();
+      showQuestion();
+    }
+
+    function startTimer() {
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+        const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+        const secs = String(totalSeconds % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function showQuestion() {
+      const q = questions[currentQuestionIndex];
+      document.getElementById('questionProgress').textContent = `Pregunta ${currentQuestionIndex + 1} de ${totalQuestions}`;
+      document.getElementById('questionText').textContent = `${q.text} = ?`;
+      document.getElementById('userAnswer').value = '';
+      document.getElementById('userAnswer').focus();
+
+      if (currentQuestionIndex === totalQuestions - 1) {
+        document.getElementById('nextBtn').innerHTML = `<span>Entregar Examen</span> <i class="fa-solid fa-check"></i>`;
+      }
+    }
+
+    // Normalizar la entrada del usuario (Soporta base^exp, o base simple si exp=1)
+    function parsePowerInput(inputStr) {
+      const clean = inputStr.trim().replace(/\s+/g, '');
+      if (!clean) return null;
+
+      if (clean.includes('^')) {
+        const parts = clean.split('^');
+        if (parts.length !== 2) return null;
+        const b = parseInt(parts[0], 10);
+        const e = parseInt(parts[1], 10);
+        if (isNaN(b) || isNaN(e)) return null;
+        return { base: b, exp: e };
+      } else {
+        const val = parseInt(clean, 10);
+        if (isNaN(val)) return null;
+        // Si el usuario introduce sólo un número, se asume exp=1 (o exp=0 si introduce 1)
+        return { base: val, exp: 1 };
+      }
+    }
+
+    function submitAnswer(e) {
+      e.preventDefault();
+      const input = document.getElementById('userAnswer').value;
+      const parsed = parsePowerInput(input);
+
+      if (!parsed) {
+        alert('Por favor, introduce una respuesta válida con formato base^exponente (ejemplo: 2^4).');
+        return;
+      }
+
+      const q = questions[currentQuestionIndex];
+
+      // Verificación de la respuesta
+      let isCorrect = false;
+
+      // 1. Coincidencia exacta de base y exponente
+      if (parsed.base === q.base && parsed.exp === q.exp) {
+        isCorrect = true;
+      } 
+      // 2. Exponente 1 (ej. 2^1 ó 2)
+      else if (q.exp === 1 && ((parsed.base === q.base && parsed.exp === 1) || (parsed.base === q.base))) {
+        isCorrect = true;
+      }
+      // 3. Exponente 0 (ej. b^0 ó 1)
+      else if (q.exp === 0 && (parsed.exp === 0 || parsed.base === 1)) {
+        isCorrect = true;
+      }
+
+      if (isCorrect) {
+        score++;
+      }
+
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex < totalQuestions) {
+        showQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function finishQuiz() {
+      clearInterval(timerInterval);
+
+      document.getElementById('quizCard').classList.add('hidden');
+      document.getElementById('resultCard').classList.remove('hidden');
+
+      document.getElementById('studentSummary').textContent = `${studentData.name} - ${studentData.group}`;
+      document.getElementById('scoreDisplay').textContent = `${score} / 10`;
+      document.getElementById('timeDisplay').textContent = `${totalSeconds}s`;
+
+      if (score >= 7) {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      }
+
+      const ahora = new Date();
+
+      const resultPayload = {
+        fecha: ahora.toLocaleString('es-ES'),
+        fechaSoloDia: ahora.toLocaleDateString('es-ES'),
+        nombre: studentData.name,
+        grupo: studentData.group,
+        nota: score,
+        tiempo: totalSeconds
+      };
+
+      localStorage.setItem('examen_potencias_naturales_completado', JSON.stringify(resultPayload));
+
+      sendToGoogleSheets(resultPayload);
+    }
+
+    function sendToGoogleSheets(payload) {
+      const statusDiv = document.getElementById('sendingStatus');
+
+      if (!SCRIPT_URL || SCRIPT_URL.includes("PEGA_AQUI")) {
+        statusDiv.className = "text-amber-600 font-medium text-sm my-4 bg-amber-50 p-3 rounded-xl border border-amber-200";
+        statusDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Nota guardada localmente. (Falta configurar la URL de Apps Script).`;
+        return;
+      }
+
+      const urlParams = new URLSearchParams({
+        fecha: payload.fecha,
+        nombre: payload.nombre,
+        grupo: payload.grupo,
+        nota: payload.nota,
+        tiempo: payload.tiempo
+      });
+
+      const fullUrl = `${SCRIPT_URL}?${urlParams.toString()}`;
+
+      fetch(fullUrl, { mode: 'no-cors' })
+        .then(() => {
+          statusDiv.className = "text-green-600 font-medium text-sm my-4 flex items-center justify-center gap-2";
+          statusDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> Nota enviada con éxito al profesor.`;
+        })
+        .catch((err) => {
+          console.error(err);
+          statusDiv.className = "text-red-500 font-medium text-sm my-4";
+          statusDiv.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Error al enviar. Avise al profesor.`;
+        });
+    }
+  </script>
+</body>
+</html>
